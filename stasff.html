@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Staff Activity Check</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    table {
+      width: 90%;
+      max-width: 1200px;
+      margin: 20px auto;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+      border: 1px solid #a9a9a9;
+      padding: 12px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    th {
+      background-color: #0074D9;
+      color: white;
+      font-size: 16px;
+    }
+    td {
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:nth-child(odd) {
+      background-color: #ffffff;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+      transition: 0.3s;
+    }
+    td.grade {
+      min-width: 150px;
+    }
+    input {
+      width: 100%;
+      border: none;
+      text-align: center;
+      font-size: 14px;
+      background: transparent;
+    }
+    input:focus {
+      outline: none;
+      background-color: #e8f0fe;
+    }
+    .button-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .button-container button {
+      font-size: 16px;
+      padding: 10px 20px;
+      background-color: #0074D9;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .button-container button:hover {
+      background-color: #005fa3;
+    }
+    .best {
+      background-color: #FFD700;
+    }
+    .insane {
+      background-color: #87CEEB;
+    }
+    .really-good {
+      background-color: #D8BFD8;
+    }
+    .new {
+      background-color: #FFB6C1;
+    }
+    .improvement-needed {
+      background-color: #FF6347;
+      color: white;
+    }
+  </style>
+  <script>
+    function updatePoints(row) {
+      let gamesHosted = parseInt(row.cells[1]?.children[0]?.value) || 0;
+      let stackedSessions = parseInt(row.cells[2]?.children[0]?.value) || 0;
+      let tickets = parseInt(row.cells[3]?.children[0]?.value) || 0;
+      let banAppeals = parseInt(row.cells[4]?.children[0]?.value) || 0;
+      let totalPoints = (gamesHosted * 25) + (stackedSessions * 75) + (tickets * 10) + (banAppeals * 10);
+      if (row.cells[5]?.children[0]) {
+        row.cells[5].children[0].value = totalPoints;
+      }
+    }
+
+    function updateGrade(row) {
+      let gradeCell = row.cells[row.cells.length - 1];
+      let grade = gradeCell.children[0].value.trim().toLowerCase();
+      gradeCell.classList.remove('best', 'insane', 'really-good', 'new', 'improvement-needed');
+
+      if (grade === "the best") {
+        gradeCell.classList.add('best');
+      } else if (grade === "insane") {
+        gradeCell.classList.add('insane');
+      } else if (grade === "really good") {
+        gradeCell.classList.add('really-good');
+      } else if (grade === "new") {
+        gradeCell.classList.add('new');
+      } else if (grade === "improvement needed") {
+        gradeCell.classList.add('improvement-needed');
+      }
+
+      gradeCell.style.transition = "background-color 0.3s ease";
+    }
+
+    function addRow(tableId) {
+      let table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+      let newRow = table.insertRow(-1);
+      let cols = table.rows[0].cells.length;
+
+      for (let i = 0; i < cols; i++) {
+        let newCell = newRow.insertCell(i);
+        if (i === cols - 1) {
+          newCell.classList.add('grade');
+          newCell.innerHTML = `<input type="text" value="" oninput="updateGrade(this.parentElement.parentElement)">`;
+        } else if (tableId === "activityTable" && i === 5) {
+          newCell.innerHTML = `<input type="text" value="0" readonly>`;
+        } else {
+          newCell.innerHTML = `<input type="text" value="" oninput="updatePoints(this.parentElement.parentElement)">`;
+        }
+      }
+    }
+
+    function deleteLastRow(tableId) {
+      let table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+      if (table.rows.length > 1) {
+        table.deleteRow(-1);
+      }
+    }
+
+    function sortTable(tableId) {
+      let table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+      let rows = Array.from(table.rows);
+
+      rows.sort((a, b) => {
+        let aPoints = parseInt(a.cells[5]?.children[0]?.value) || 0;
+        let bPoints = parseInt(b.cells[5]?.children[0]?.value) || 0;
+        return bPoints - aPoints;
+      });
+
+      rows.forEach(row => table.appendChild(row));
+    }
+  </script>
+</head>
+<body>
+  <h1>Nova Staff Activity Check</h1>
+
+  <!-- Górna tabela -->
+  <div class="button-container">
+    <button onclick="addRow('activityTable')">Add Staff Member</button>
+    <button onclick="deleteLastRow('activityTable')">Delete Staff Member</button>
+    <button onclick="sortTable('activityTable')">Sort</button>
+  </div>
+
+  <table id="activityTable">
+    <thead>
+      <tr>
+        <th>Staff Name</th>
+        <th>Games Hosted</th>
+        <th>Stacked Sessions</th>
+        <th>Tickets</th>
+        <th>Ban Appeals</th>
+        <th>Total Points</th>
+        <th class="grade">Grade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><input type="text" value="kawik10" oninput="updatePoints(this.parentElement.parentElement)"></td>
+        <td><input type="text" value="16" oninput="updatePoints(this.parentElement.parentElement)"></td>
+        <td><input type="text" value="0" oninput="updatePoints(this.parentElement.parentElement)"></td>
+        <td><input type="text" value="5" oninput="updatePoints(this.parentElement.parentElement)"></td>
+        <td><input type="text" value="4" oninput="updatePoints(this.parentElement.parentElement)"></td>
+        <td><input type="text" value="440" readonly></td>
+        <td class="grade"><input type="text" value="The Best" oninput="updateGrade(this.parentElement.parentElement)"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Dolna tabela -->
+  <div class="button-container">
+    <button onclick="addRow('staffTable')">Add Staff Member</button>
+    <button onclick="deleteLastRow('staffTable')">Delete Staff Member</button>
+    <button onclick="sortTable('staffTable')">Sort</button>
+  </div>
+
+  <table id="staffTable">
+    <thead>
+      <tr>
+        <th>Staff Name</th>
+        <th>Tickets Closed</th>
+        <th>Grade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><input type="text" value="kawik10"></td>
+        <td><input type="text" value="10"></td>
+        <td class="grade"><input type="text" value="The Best" oninput="updateGrade(this.parentElement.parentElement)"></td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>
